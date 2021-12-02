@@ -75,6 +75,7 @@ GameObject:
   - component: {fileID: 682719313050079382}
   - component: {fileID: 682719313050079380}
   - component: {fileID: 4970574268368382182}
+  - component: {fileID: 4448757733748106671}
   m_Layer: 0
   m_Name: SmolIna
   m_TagString: Untagged
@@ -142,7 +143,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 412334765804641935}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2fdc17ec0c2f7d248a8b9e9154f7d602, type: 3}
   m_Name: 
@@ -166,6 +167,20 @@ MonoBehaviour:
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &4448757733748106671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 412334765804641935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1720531551dc6e4fb3a0480f7b7d581, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Position:
+    m_InternalValue: {x: 0, y: 0, z: 0}
 --- !u!1 &585451835405994029
 GameObject:
   m_ObjectHideFlags: 0

@@ -42,7 +42,9 @@ public class NetcodeManager : MonoBehaviour
         string buttonLabel = NetworkManager.Singleton.IsServer ? "Move" : "Request Position Change";
         if(GUILayout.Button(buttonLabel))
         {
-            //
+            var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+            var player = playerObj.GetComponent<Player>();
+            player.Move();
         }
     }
 }

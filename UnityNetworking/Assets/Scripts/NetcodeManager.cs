@@ -5,6 +5,24 @@ using UnityEngine;
 
 public class NetcodeManager : MonoBehaviour
 {
+    /// <summary>
+    /// This extends MonoBehavior, meaning the physical changes you're seeing and doing in game are done here.
+    /// That also means when things go out of sync, your changes here might rubberband after Player.cs finally updates Network variables that affect your game
+    /// </summary>
+    float timeout = .5f;
+    Vector3 moveVec = Vector3.zero;
+    float h = 0f;
+    float v = 0f;
+    float speed = 5f;
+    bool isPlaying = false;
+    bool waitOnce = true;
+
+    public Animator anim;
+    //public CharacterController controller;
+    float rotationSpeed = 1000f;
+    float rotateAngle = -26f;
+    public bool isMoving = false;
+
     public void OnGUI()
     {
         //runs at the start of the game and whenever UI has to do something
@@ -17,9 +35,57 @@ public class NetcodeManager : MonoBehaviour
         {
             StatusLabels();
             SubmitNewPosition();
+            isPlaying = true;
         }
 
         GUILayout.EndArea();
+    }
+
+    void Update()
+    {
+        h = Input.GetAxisRaw("Horizontal");
+        v = Input.GetAxisRaw("Vertical");
+    }
+
+    void FixedUpdate()
+    {
+        if(isPlaying)
+        {
+            //wait for objects to spawn so there aren't any fetch errors
+            if (waitOnce) timeout -= Time.fixedDeltaTime;
+            if (timeout <= 0f)
+            {
+                //set animator
+                var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+                anim = p.GetComponent<Animator>();
+
+                waitOnce = false;
+                moveVec = Vector3.Normalize(new Vector3(h, 0f, v));
+
+                if (moveVec != Vector3.zero)
+                {
+                    isMoving = true;
+                    Quaternion toRotation = Quaternion.LookRotation(Quaternion.AngleAxis(rotateAngle, Vector3.up) * moveVec, Vector3.up);
+                    //transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.fixedDeltaTime);
+                    Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.fixedDeltaTime);
+
+                    var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+                    var player = playerObj.GetComponent<Player>();
+                    player.MoveInput(moveVec * speed * Time.fixedDeltaTime, finalRotation);
+                }
+                else
+                {
+                    isMoving = false;
+                    Quaternion toRotation = Quaternion.LookRotation(moveVec, Vector3.up);
+                    Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed);
+
+                    var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+                    var player = playerObj.GetComponent<Player>();
+                    player.MoveInput(moveVec * speed * Time.fixedDeltaTime, finalRotation);
+                }
+                anim.SetBool("isMoving", isMoving);
+            }
+        }
     }
 
     static void StartButtons()

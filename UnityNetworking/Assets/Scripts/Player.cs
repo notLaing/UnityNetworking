@@ -56,6 +56,22 @@ public class Player : NetworkBehaviour
                 SubmitMoveRequestServerRpc(m, r);
             }
         }
+        else
+        {
+            if (NetworkManager.Singleton.IsServer)
+            {
+                //set rotation on not moving
+                transform.rotation = r;
+                Rotation.Value = r;
+                Animator a = transform.gameObject.GetComponent<Animator>();
+                a.SetBool("isMoving", false);
+            }
+            else
+            {
+                //request a position
+                SubmitMoveRequestServerRpc(m, r);
+            }
+        }
     }
 
     public void OnPositionChange(Vector3 prev, Vector3 value)
@@ -67,6 +83,16 @@ public class Player : NetworkBehaviour
         Quaternion toRotation = Quaternion.LookRotation(Quaternion.AngleAxis(-26f, Vector3.up) * change, Vector3.up);
         Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, toRotation, 1000f);// * Time.fixedDeltaTime);*/
         transform.rotation = Rotation.Value;
+        if (prev != value)
+        {
+            Animator a = transform.gameObject.GetComponent<Animator>();
+            a.SetBool("isMoving", true);
+        }
+        else
+        {
+            Animator a = transform.gameObject.GetComponent<Animator>();
+            a.SetBool("isMoving", false);
+        }
     }
 
     static Vector3 GetRandomPositionOnPlane()
@@ -87,5 +113,11 @@ public class Player : NetworkBehaviour
         Debug.Log("Called from move");
         Position.Value += m;
         Rotation.Value = r;
+
+        if (m == Vector3.zero)
+        {
+            Animator a = transform.gameObject.GetComponent<Animator>();
+            a.SetBool("isMoving", false);
+        }
     }
 }

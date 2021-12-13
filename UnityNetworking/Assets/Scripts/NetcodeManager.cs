@@ -60,14 +60,14 @@ public class NetcodeManager : MonoBehaviour
                 anim = p.GetComponent<Animator>();
 
                 waitOnce = false;
-                moveVec = Vector3.Normalize(new Vector3(h, 0f, v));
 
-                if (moveVec != Vector3.zero)
+                if (h != 0f || v != 0f)
                 {
+                    moveVec = Vector3.Normalize(new Vector3(h, 0f, v));
                     isMoving = true;
                     Quaternion toRotation = Quaternion.LookRotation(Quaternion.AngleAxis(rotateAngle, Vector3.up) * moveVec, Vector3.up);
                     //transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.fixedDeltaTime);
-                    Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.fixedDeltaTime);
+                    Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed);// * Time.fixedDeltaTime);
 
                     var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
                     var player = playerObj.GetComponent<Player>();
@@ -81,7 +81,7 @@ public class NetcodeManager : MonoBehaviour
 
                     var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
                     var player = playerObj.GetComponent<Player>();
-                    player.MoveInput(moveVec * speed * Time.fixedDeltaTime, finalRotation);
+                    player.MoveInput(Vector3.zero, finalRotation);
                 }
                 anim.SetBool("isMoving", isMoving);
             }

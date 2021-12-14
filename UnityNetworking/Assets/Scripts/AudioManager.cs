@@ -17,13 +17,13 @@ public class AudioManager : MonoBehaviour
     void Awake()
     {
         // don't destroy on scene change
-        if (instance == null) instance = this;
+        /*if (instance == null) instance = this;
         else
         {
             Destroy(gameObject);
             return;
         }
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject);*/
 
         // add audio source component to each sound
         foreach (Sound s in sounds)

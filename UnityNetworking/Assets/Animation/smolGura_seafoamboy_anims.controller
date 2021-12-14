@@ -32,7 +32,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Ina_Idle
+  m_Name: Gura_Idle
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
@@ -46,7 +46,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: -5252816984213320552, guid: e4cb7452cf03b664391f4e171082fe67, type: 3}
+  m_Motion: {fileID: -5252816984213320552, guid: 6fd1bb5b03e47cb41a178d0d31edf587, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -73,7 +73,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: -6303781394681572959, guid: e4cb7452cf03b664391f4e171082fe67, type: 3}
+  m_Motion: {fileID: -6263842705515180725, guid: 6fd1bb5b03e47cb41a178d0d31edf587, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -162,7 +162,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: smolina_seafoamboy_anims
+  m_Name: smolGura_seafoamboy_anims
   serializedVersion: 5
   m_AnimatorParameters:
   - m_Name: isMoving

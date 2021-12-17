@@ -71,6 +71,21 @@ public class NetcodeManager : MonoBehaviour
 
     void FixedUpdate()
     {
+        //testing: use this in conjunction with NetworkManager.Singleton stuff to see if
+        GameObject.Find("/Canvas/Test").GetComponent<TMPro.TMP_Text>().text = NetworkManager.Singleton.gameObject.tag;
+
+        foreach(NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            //can use this to set each smol character as well as set variable for all of them to play
+
+            //client.PlayerObject.transform.GetComponent<Player>().ReadyToPlay.Value = true;//or something like that
+        }
+        //next line will be useful along with the foreach stuff
+        if(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>())
+        {
+            //add something to the if statement so that we can say start playing stuff below when everything is good to go
+        }
+
         if(isPlaying)
         {
             //wait for objects to spawn so there aren't any fetch errors

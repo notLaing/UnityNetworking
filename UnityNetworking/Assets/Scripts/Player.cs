@@ -20,10 +20,18 @@ public class Player : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         Position.OnValueChanged += OnPositionChange;
-        if(IsOwner)//
+        if (IsOwner)//
         {
             Move();
             SetVariables();
+
+            //set/request to set the lobby panel up
+
+            /*if (NetworkManager.Singleton.IsServer)
+            {
+                give start button(which will be a public variable in netcode manager)
+                the start button/canvas needs its own script that extends NetworkBehavior in order to request game start on all clients
+            }*/
         }
     }
 

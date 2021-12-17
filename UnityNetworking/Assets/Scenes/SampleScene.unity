@@ -553,6 +553,7 @@ GameObject:
   - component: {fileID: 202657046}
   - component: {fileID: 202657048}
   - component: {fileID: 202657049}
+  - component: {fileID: 202657050}
   m_Layer: 0
   m_Name: NetcodeManager
   m_TagString: Untagged
@@ -574,6 +575,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   anim: {fileID: 0}
   isMoving: 0
+  startButton: {fileID: 1151028899}
+  lobbyMenu: {fileID: 878839798}
 --- !u!4 &202657047
 Transform:
   m_ObjectHideFlags: 0
@@ -619,6 +622,20 @@ MonoBehaviour:
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &202657050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 202657045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be0020cb914e12b4a92fc222cacb5916, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  StartGame:
+    m_InternalValue: 0
 --- !u!224 &335893960 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 523058928790276702, guid: a6edad1853e8322418ca1b4f9d811fe6, type: 3}
@@ -912,7 +929,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: Debug text
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1608,7 +1625,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1151028900
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1672,7 +1689,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1151028902}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 202657050}
+        m_TargetAssemblyTypeName: GameManagerScript, Assembly-CSharp
+        m_MethodName: StartPlay
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1151028902
 MonoBehaviour:
   m_ObjectHideFlags: 0

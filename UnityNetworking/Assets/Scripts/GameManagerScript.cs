@@ -17,7 +17,7 @@ public class GameManagerScript : NetworkBehaviour
 
     void FixedUpdate()
     {
-        if(StartGame.Value)
+        /*if(StartGame.Value)
         {
             if(NetworkManager.Singleton.IsServer)
             {
@@ -28,6 +28,11 @@ public class GameManagerScript : NetworkBehaviour
             {
                 //request serverrpc
             }
+        }*/
+
+        if(NetworkManager.Singleton.IsServer)
+        {
+
         }
     }
 
@@ -35,5 +40,9 @@ public class GameManagerScript : NetworkBehaviour
     {
         //button for the host to start the game
         StartGame.Value = true;
+
+        var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+        p.GetComponent<Player>().Playing.Value = true;
+        GameObject.Find("/Canvas/Panel - Lobby").SetActive(false);
     }
 }

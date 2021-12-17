@@ -15,7 +15,9 @@ public class Player : NetworkBehaviour
     public NetworkVariable<float> SpeedTime = new NetworkVariable<float>();
     public NetworkVariable<float> GameTime = new NetworkVariable<float>();//ONLY the server player's time matters
     public NetworkVariable<int> Points = new NetworkVariable<int>();
+    public NetworkVariable<int> PlayerNum = new NetworkVariable<int>();
     public NetworkVariable<bool> Buffed = new NetworkVariable<bool>();
+    public NetworkVariable<bool> Playing = new NetworkVariable<bool>();
 
     public override void OnNetworkSpawn()
     {
@@ -45,6 +47,7 @@ public class Player : NetworkBehaviour
             GameTime.Value = 120f;
             Points.Value = 0;
             Buffed.Value = false;
+            Playing.Value = false;
         }
         else
         {
@@ -122,24 +125,20 @@ public class Player : NetworkBehaviour
             //var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
             //var player = playerObj.GetComponent<Player>();
             IncreasePoints();
-            Debug.Log("Points: " + Points.Value);
         }
         else if (other.tag == "Drop_Speed")
         {
             other.GetComponent<Drop>().Collected();
             IncreaseSpeed();
-            Debug.Log("Speed up");
         }
         else if (other.tag == "Drop_Steal")
         {
             other.GetComponent<Drop>().Collected();
             StealBuff();
-            Debug.Log("Steal buff ready");
         }
         //check if this player hit another player while this player has the steal buff
         else if (other.tag == "Player")
         {
-            Debug.Log("Player");
             if (Buffed.Value)
             {
                 //steal up to 5 points from the other player
@@ -342,7 +341,6 @@ public class Player : NetworkBehaviour
     [ServerRpc]//client -> server
     public void SubmitPositionRequestServerRpc(ServerRpcParams rpcParams = default)
     {
-        Debug.Log("Called from button");
         Position.Value = GetRandomPositionOnPlane();
         //move camera only to this player's playerObj
         //if(IsOwner) FindObjectOfType<CameraFollow>().MoveToPlayer(transform.gameObject);
@@ -351,7 +349,6 @@ public class Player : NetworkBehaviour
     [ServerRpc]//client -> server
     public void SubmitMoveRequestServerRpc(Vector3 m, Quaternion r, ServerRpcParams rpcParams = default)
     {
-        Debug.Log("Called from move");
         //not sure if the next two lines can be here, since they might take away from Server authority
         //however, since I'm doing this in a ServerRpc, I'm really moving an object from the server, aren't I? What's the real difference between this and {Position.Value = GetRandomPositionOnPlane()} from class?
         CharacterController controller = transform.gameObject.GetComponent<CharacterController>();
@@ -377,6 +374,7 @@ public class Player : NetworkBehaviour
         SpeedTime.Value = 0f;
         Points.Value = 0;
         Buffed.Value = false;
+        Playing.Value = false;
     }
 
     [ServerRpc]

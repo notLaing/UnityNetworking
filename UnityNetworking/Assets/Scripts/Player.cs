@@ -37,6 +37,14 @@ public class Player : NetworkBehaviour
         }
     }
 
+    void FixedUpdate()
+    {
+        if(Playing.Value)
+        {
+            TimePass(Time.fixedDeltaTime);
+        }
+    }
+
     public void SetVariables()
     {
         if (NetworkManager.Singleton.IsServer)
@@ -158,42 +166,17 @@ public class Player : NetworkBehaviour
         }
     }
 
-    /*void OnCollisionEnter(Collision collision)
-    {
-        Debug.Log("Collision");
-        //check if this player hit another player while this player has the steal buff
-        if (collision.gameObject.tag == "Player")
-        {
-            if (Buffed.Value)
-            {
-                //steal up to 5 points from the other player
-                var otherPlayer = collision.gameObject.GetComponent<Player>();
-
-                if (otherPlayer.Points.Value < 5)
-                {
-                    Steal(otherPlayer.Points.Value);
-                    otherPlayer.Robbed(otherPlayer.Points.Value);
-                }
-                else
-                {
-                    Steal(5);
-                    otherPlayer.Robbed(5);
-                }
-            }
-        }
-    }*/
-
-    /*public void TimePass()
+    public void TimePass(float t)
     {
         if (NetworkManager.Singleton.IsServer)
         {
-            GameTime.Value -= Time.fixedDeltaTime;
+            GameTime.Value -= t;
         }
         else
         {
-            //PointsRequestServerRpc();
+            TimeRequestServerRpc(t);
         }
-    }*/
+    }
 
     /*public void EndGame()
     {
@@ -372,6 +355,7 @@ public class Player : NetworkBehaviour
     {
         Speed.Value = 150f;
         SpeedTime.Value = 0f;
+        GameTime.Value = 120f;
         Points.Value = 0;
         Buffed.Value = false;
         Playing.Value = false;
@@ -420,6 +404,16 @@ public class Player : NetworkBehaviour
     public void LosePointsServerRpc(int l, ServerRpcParams rpcParams = default)
     {
         Points.Value -= l;
+    }
+
+    [ServerRpc]
+    public void TimeRequestServerRpc(float t, ServerRpcParams rpcParams = default)
+    {
+        /*foreach(NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            if(client.PlayerObject.IsS)
+        }*/
+        GameTime.Value -= t;
     }
 
     /*[ServerRpc]

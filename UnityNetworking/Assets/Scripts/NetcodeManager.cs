@@ -9,13 +9,13 @@ public class NetcodeManager : MonoBehaviour
     /// This extends MonoBehavior, meaning the physical changes you're seeing and doing in game are done here.
     /// That also means when things go out of sync, your changes here might rubberband after Player.cs finally updates Network variables that affect your game
     /// </summary>
-    GameObject instructions, pointText;
+    GameObject instructions, panelGameplay;
     float timeout = .5f;
-    float gameTime = 120f;
     Vector3 moveVec = Vector3.zero;
     float h = 0f;
     float v = 0f;
     float speed = 5f;
+    int hostNumberInClients = 0;
     bool isPlaying = false;
     bool waitOnce = true;
     bool gameOver = true;
@@ -26,7 +26,7 @@ public class NetcodeManager : MonoBehaviour
     float rotationSpeed = 1000f;
     float rotateAngle = -26f;
     public bool isMoving = false;
-    public GameObject startButton, lobbyMenu;
+    public GameObject startButton, lobbyMenu, gameTimer, pointUI;
 
     AudioManager aud;
     bool audioOnce = false;
@@ -37,8 +37,10 @@ public class NetcodeManager : MonoBehaviour
     {
         aud = FindObjectOfType<AudioManager>();
         instructions = GameObject.Find("/Canvas/Instructions");
-        pointText = GameObject.Find("/Canvas/Points");
-        pointText.SetActive(false);
+        panelGameplay = GameObject.Find("/Canvas/Panel - Gameplay");
+        gameTimer = GameObject.Find("/Canvas/Panel - Gameplay/GameTimer");
+        pointUI = GameObject.Find("/Canvas/Panel - Gameplay/Points");
+        panelGameplay.SetActive(false);
     }
 
     public void OnGUI()
@@ -110,6 +112,7 @@ public class NetcodeManager : MonoBehaviour
                     foreach(NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
                     {
                         client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
+                        if(!audioOnce) client.PlayerObject.transform.GetComponent<Player>().GameTime.Value = 120f;
                     }
                 }
             }
@@ -137,7 +140,7 @@ public class NetcodeManager : MonoBehaviour
                     aud.Play("Blue Clapper Instrumental");
                     audioOnce = true;
                     instructions.SetActive(false);
-                    pointText.SetActive(true);
+                    panelGameplay.SetActive(true);
                 }
 
                 //////////////////////////////////////////////////////////////////////////////////////GAME LOOP STARTS HERE
@@ -146,6 +149,9 @@ public class NetcodeManager : MonoBehaviour
                     //set animator
                     var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
                     anim = p.GetComponent<Animator>();
+
+                    //set timer
+                    gameTimer.GetComponent<TMPro.TMP_Text>().text = Mathf.Floor(t.GetComponent<Player>().GameTime.Value).ToString();//currently only updates for host since there isn't code to change the value for other clients
 
                     waitOnce = false;
 
@@ -195,7 +201,8 @@ public class NetcodeManager : MonoBehaviour
                     }
 
                     //point text
-                    pointText.GetComponent<TMPro.TMP_Text>().text = "Points: " + pl.Points.Value;
+                    //panelGameplay.GetComponent<TMPro.TMP_Text>().text = "Points: " + pl.Points.Value;
+                    pointUI.GetComponent<TMPro.TMP_Text>().text = "Points: " + pl.Points.Value;
 
                 }//if(timeout <= 0f)
                  //////////////////////////////////////////////////////////////////////////////////////GAME LOOP ENDS HERE
@@ -223,7 +230,7 @@ public class NetcodeManager : MonoBehaviour
                 aud.Play("Cassette Tape Dream");
                 audioOnce = false;
                 instructions.SetActive(true);
-                pointText.SetActive(false);
+                panelGameplay.SetActive(false);
             }
 
             waitOnce = true;

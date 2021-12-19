@@ -211,17 +211,30 @@ public class Player : NetworkBehaviour
 
     public void SetNames()
     {
-        int i = 0;
-        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        if (NetworkManager.Singleton.IsServer)
         {
-            if (i < 5)
+            int i = 0;
+            foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
             {
-                GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Ready").GetComponent<TMPro.TMP_Text>().text = client.PlayerObject.transform.GetComponent<Player>().username + "\nis ready";
-                ++i;
+                if (i < 5)
+                {
+                    GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Ready").GetComponent<TMPro.TMP_Text>().text = client.PlayerObject.transform.GetComponent<Player>().username + "\nis ready";
+                    ++i;
+                }
             }
         }
+        else
+        {
+            SetNameServerRpc();
+        }
+    }
 
-        
+    public void DeactivateLobby()
+    {
+        if(GameObject.Find("/Canvas/Panel - Lobby") != null)
+        {
+            GameObject.Find("/Canvas/Panel - Lobby").SetActive(false);
+        }
     }
 
     public void ShowResults()
@@ -510,5 +523,19 @@ public class Player : NetworkBehaviour
     {
         NetworkManager.Singleton.DisconnectClient(n);
         Destroy(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject());
+    }
+
+    [ServerRpc]
+    public void SetNameServerRpc(ServerRpcParams rpcParams = default)
+    {
+        int i = 0;
+        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            if (i < 5)
+            {
+                GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Ready").GetComponent<TMPro.TMP_Text>().text = client.PlayerObject.transform.GetComponent<Player>().username + "\nis ready";
+                ++i;
+            }
+        }
     }
 }

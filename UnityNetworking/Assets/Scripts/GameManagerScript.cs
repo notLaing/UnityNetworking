@@ -39,10 +39,16 @@ public class GameManagerScript : NetworkBehaviour
     public void StartPlay()
     {
         //button for the host to start the game
-        StartGame.Value = true;
+        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
+            client.PlayerObject.transform.GetComponent<GameManagerScript>().StartGame.Value = true;
+            client.PlayerObject.transform.GetComponent<Player>().DeactivateLobby();
+        }
+        /*StartGame.Value = true;
 
         var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
         p.GetComponent<Player>().Playing.Value = true;
-        GameObject.Find("/Canvas/Panel - Lobby").SetActive(false);
+        GameObject.Find("/Canvas/Panel - Lobby").SetActive(false);*/
     }
 }

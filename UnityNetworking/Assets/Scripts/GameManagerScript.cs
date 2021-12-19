@@ -44,11 +44,14 @@ public class GameManagerScript : NetworkBehaviour
             client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
             client.PlayerObject.transform.GetComponent<GameManagerScript>().StartGame.Value = true;
             client.PlayerObject.transform.GetComponent<Player>().DeactivateLobby();
+            client.PlayerObject.transform.GetComponent<NetcodeManager>().lobby = false;
+            client.PlayerObject.transform.GetComponent<NetcodeManager>().isPlaying = true;
+            //client.PlayerObject.transform.GetComponent<NetcodeManager>().gui = false;
         }
-        /*StartGame.Value = true;
+        StartGame.Value = true;
 
         var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
         p.GetComponent<Player>().Playing.Value = true;
-        GameObject.Find("/Canvas/Panel - Lobby").SetActive(false);*/
+        /*GameObject.Find("/Canvas/Panel - Lobby").SetActive(false);*/
     }
 }

@@ -15,10 +15,10 @@ public class NetcodeManager : MonoBehaviour
     float h = 0f;
     float v = 0f;
     float speed = 5f;
-    bool isPlaying = false;
+    public bool isPlaying = false;
     bool waitOnce = true;
     bool gameOver = true;
-    bool lobby = true;
+    public bool lobby = true;
 
     public Animator anim;
     //public CharacterController controller;
@@ -29,7 +29,7 @@ public class NetcodeManager : MonoBehaviour
 
     AudioManager aud;
     bool audioOnce = false;
-    static bool gui = true;
+    public static bool gui = true;
 
     float spawnTime = 0f;
 

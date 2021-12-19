@@ -279,6 +279,13 @@ public class Player : NetworkBehaviour
         return msg;
     }
 
+    public void SetIsPlaying()
+    {
+        GameObject.Find("NetcodeManager").GetComponent<NetcodeManager>().isPlaying = true;
+        GameObject.Find("NetcodeManager").GetComponent<NetcodeManager>().lobby = false;
+        GameObject.Find("NetcodeManager").GetComponent<GameManagerScript>().StartGame.Value = true;
+    }
+
     public void IncreasePoints()
     {
         if(NetworkManager.Singleton.IsServer)

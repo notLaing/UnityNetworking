@@ -106,8 +106,29 @@ public class NetcodeManager : MonoBehaviour
         */
 
         //prep every client to play the game (set timer)
+        if(!NetworkManager.Singleton.IsServer)
+        {
+            Debug.Log("lobby: " + lobby + "\nisPlaying: " + isPlaying);
+        }
         if (lobby)
         {
+            if (NetworkManager.Singleton.IsServer)
+            {
+                var host = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+                if (host != null)
+                {
+                    if (host.GetComponent<Player>().Playing.Value)
+                    {
+                        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+                        {
+                            client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
+                            client.PlayerObject.transform.GetComponent<Player>().SetNames();
+                            if (!audioOnce) client.PlayerObject.transform.GetComponent<Player>().GameTime.Value = 10f;
+                        }
+                    }
+                }
+            }
+
             if (!gui && lobbyMenu.activeSelf)
             {
                 int clientSize = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>().ReturnClientCount();
@@ -122,24 +143,6 @@ public class NetcodeManager : MonoBehaviour
                     {
                         GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Ready").SetActive(false);
                         GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Waiting").SetActive(true);
-                    }
-                }
-            }
-            
-
-            if (NetworkManager.Singleton.IsServer)
-            {
-                var host = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
-                if (host != null)
-                {
-                    if (host.GetComponent<Player>().Playing.Value)
-                    {
-                        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
-                        {
-                            client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
-                            //client.PlayerObject.transform.GetComponent<Player>().SetNames();
-                            if (!audioOnce) client.PlayerObject.transform.GetComponent<Player>().GameTime.Value = 10f;
-                        }
                     }
                 }
             }
@@ -160,6 +163,23 @@ public class NetcodeManager : MonoBehaviour
                     audioOnce = true;
                     instructions.SetActive(false);
                     panelGameplay.SetActive(true);
+
+                    if (NetworkManager.Singleton.IsServer)
+                    {
+                        var host = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+                        if (host != null)
+                        {
+                            if (host.GetComponent<Player>().Playing.Value)
+                            {
+                                foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+                                {
+                                    client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
+                                    //client.PlayerObject.transform.GetComponent<Player>().SetNames();
+                                    client.PlayerObject.transform.GetComponent<Player>().GameTime.Value = 10f;
+                                }
+                            }
+                        }
+                    }
                 }
                 //wait for objects to spawn so there aren't any fetch errors, as well as music
                 if (waitOnce) timeout -= Time.fixedDeltaTime;

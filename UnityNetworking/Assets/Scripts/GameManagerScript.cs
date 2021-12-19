@@ -17,41 +17,39 @@ public class GameManagerScript : NetworkBehaviour
 
     void FixedUpdate()
     {
-        /*if(StartGame.Value)
-        {
-            if(NetworkManager.Singleton.IsServer)
-            {
-                //can kind of cheat; NetworkManager can run checks for if the player IsServer or IsClient. That means I can make every client and server do something so long as the server says it's okay
-                //But I still need some way for the clients to know the server says it's okay
-            }
-            else
-            {
-                //request serverrpc
-            }
-        }*/
-
-        if(NetworkManager.Singleton.IsServer)
-        {
-
-        }
+        
     }
 
     public void StartPlay()
     {
         //button for the host to start the game
-        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        /*foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
         {
             client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
-            client.PlayerObject.transform.GetComponent<GameManagerScript>().StartGame.Value = true;
+            //client.PlayerObject.transform.GetComponent<GameManagerScript>().StartGame.Value = true;
+            client.PlayerObject.transform.GetComponent<Player>().SetIsPlaying();
             client.PlayerObject.transform.GetComponent<Player>().DeactivateLobby();
-            client.PlayerObject.transform.GetComponent<NetcodeManager>().lobby = false;
-            client.PlayerObject.transform.GetComponent<NetcodeManager>().isPlaying = true;
+            //client.PlayerObject.transform.GetComponent<NetcodeManager>().lobby = false;
+            //client.PlayerObject.transform.GetComponent<NetcodeManager>().isPlaying = true;
             //client.PlayerObject.transform.GetComponent<NetcodeManager>().gui = false;
-        }
+        }*/
         StartGame.Value = true;
 
         var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
         p.GetComponent<Player>().Playing.Value = true;
         /*GameObject.Find("/Canvas/Panel - Lobby").SetActive(false);*/
+
+        HashSet<NetworkObject> list = NetworkManager.Singleton.SpawnManager.SpawnedObjectsList;
+        foreach(NetworkObject n in list)
+        {
+            if(n.GetComponent<Player>() != null)
+            {
+                var client = n.GetComponent<Player>();
+                client.Playing.Value = true;
+                //client.PlayerObject.transform.GetComponent<GameManagerScript>().StartGame.Value = true;
+                client.SetIsPlaying();
+                client.DeactivateLobby();
+            }
+        }
     }
 }

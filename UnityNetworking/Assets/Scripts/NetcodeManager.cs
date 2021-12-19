@@ -9,13 +9,12 @@ public class NetcodeManager : MonoBehaviour
     /// This extends MonoBehavior, meaning the physical changes you're seeing and doing in game are done here.
     /// That also means when things go out of sync, your changes here might rubberband after Player.cs finally updates Network variables that affect your game
     /// </summary>
-    GameObject instructions, panelGameplay;
-    float timeout = .5f;
+    GameObject instructions, panelGameplay, panelGameover;
+    float timeout = 3.5f;
     Vector3 moveVec = Vector3.zero;
     float h = 0f;
     float v = 0f;
     float speed = 5f;
-    int hostNumberInClients = 0;
     bool isPlaying = false;
     bool waitOnce = true;
     bool gameOver = true;
@@ -26,28 +25,32 @@ public class NetcodeManager : MonoBehaviour
     float rotationSpeed = 1000f;
     float rotateAngle = -26f;
     public bool isMoving = false;
-    public GameObject startButton, lobbyMenu, gameTimer, pointUI;
+    public GameObject startButton, lobbyMenu, gameTimer, pointUI, credits;
 
     AudioManager aud;
     bool audioOnce = false;
+    static bool gui = true;
 
-    float spawnTime = 3f;
+    float spawnTime = 0f;
 
     private void Start()
     {
         aud = FindObjectOfType<AudioManager>();
         instructions = GameObject.Find("/Canvas/Instructions");
         panelGameplay = GameObject.Find("/Canvas/Panel - Gameplay");
+        panelGameover = GameObject.Find("/Canvas/Panel - GameOver");
         gameTimer = GameObject.Find("/Canvas/Panel - Gameplay/GameTimer");
         pointUI = GameObject.Find("/Canvas/Panel - Gameplay/Points");
+        credits = GameObject.Find("/Canvas/Credits");
         panelGameplay.SetActive(false);
+        panelGameover.SetActive(false);
     }
 
     public void OnGUI()
     {
         //runs at the start of the game and whenever UI has to do something
         GUILayout.BeginArea(new Rect(10, 10, 300, 500));
-        if(!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer)
+        if((!NetworkManager.Singleton.IsClient && !NetworkManager.Singleton.IsServer) || gui)
         {
             StartButtons();
         }
@@ -55,12 +58,15 @@ public class NetcodeManager : MonoBehaviour
         {
             StatusLabels();
             //SubmitNewPosition();
-            isPlaying = true;
-            gameOver = false;
+            
+            
 
-            if (NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject() != null && NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>().Playing.Value == false)
+            if (NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject() != null && NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>().Playing.Value == false && lobby)
             {
                 lobbyMenu.SetActive(true);
+                isPlaying = true;
+                gameOver = false;
+                credits.SetActive(false);
                 if (NetworkManager.Singleton.IsServer) startButton.SetActive(true);
             }
         }
@@ -81,9 +87,6 @@ public class NetcodeManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        //testing: use this in conjunction with NetworkManager.Singleton stuff to see if
-        GameObject.Find("/Canvas/Test").GetComponent<TMPro.TMP_Text>().text = NetworkManager.Singleton.gameObject.tag;
-
         /*int clientNum = 0;
         foreach(NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
         {
@@ -102,38 +105,54 @@ public class NetcodeManager : MonoBehaviour
         }
         */
 
-        if (lobby && NetworkManager.Singleton.IsServer)
+        //prep every client to play the game (set timer)
+        if (lobby)
         {
-            var host = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
-            if(host != null)
+            if (!gui && lobbyMenu.activeSelf)
             {
-                if(host.GetComponent<Player>().Playing.Value)
+                int clientSize = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>().ReturnClientCount();
+                for (int i = 0; i < 5; ++i)
                 {
-                    foreach(NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+                    if (i < clientSize)
                     {
-                        client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
-                        if(!audioOnce) client.PlayerObject.transform.GetComponent<Player>().GameTime.Value = 120f;
+                        GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Waiting").SetActive(false);
+                        GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Ready").SetActive(true);
+                    }
+                    else
+                    {
+                        GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Ready").SetActive(false);
+                        GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Waiting").SetActive(true);
                     }
                 }
             }
-        }
+            
 
+            if (NetworkManager.Singleton.IsServer)
+            {
+                var host = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+                if (host != null)
+                {
+                    if (host.GetComponent<Player>().Playing.Value)
+                    {
+                        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+                        {
+                            client.PlayerObject.transform.GetComponent<Player>().Playing.Value = true;
+                            //client.PlayerObject.transform.GetComponent<Player>().SetNames();
+                            if (!audioOnce) client.PlayerObject.transform.GetComponent<Player>().GameTime.Value = 10f;
+                        }
+                    }
+                }
+            }
+        }//if (lobby)
 
-
-        
         if (isPlaying)
         {
-
-
-
-            var t = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
-            if (t.GetComponent<Player>().Playing.Value)
+            var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
+            if (p.GetComponent<Player>().Playing.Value)
             {
                 lobbyMenu.SetActive(false);
+                lobby = false;
 
-
-                //wait for objects to spawn so there aren't any fetch errors
-                if (waitOnce) timeout -= Time.fixedDeltaTime;
                 if (!audioOnce)
                 {
                     aud.Stop("Cassette Tape Dream");
@@ -142,18 +161,20 @@ public class NetcodeManager : MonoBehaviour
                     instructions.SetActive(false);
                     panelGameplay.SetActive(true);
                 }
+                //wait for objects to spawn so there aren't any fetch errors, as well as music
+                if (waitOnce) timeout -= Time.fixedDeltaTime;
 
                 //////////////////////////////////////////////////////////////////////////////////////GAME LOOP STARTS HERE
                 if (timeout <= 0f)
                 {
+                    waitOnce = false;
+                    var player = p.GetComponent<Player>();
+
                     //set animator
-                    var p = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
                     anim = p.GetComponent<Animator>();
 
                     //set timer
-                    gameTimer.GetComponent<TMPro.TMP_Text>().text = Mathf.Floor(t.GetComponent<Player>().GameTime.Value).ToString();//currently only updates for host since there isn't code to change the value for other clients
-
-                    waitOnce = false;
+                    gameTimer.GetComponent<TMPro.TMP_Text>().text = Mathf.Floor(p.GetComponent<Player>().GameTime.Value).ToString();//currently only updates for host since there isn't code to change the value for other clients
 
                     //move player
                     if (h != 0f || v != 0f)
@@ -164,8 +185,6 @@ public class NetcodeManager : MonoBehaviour
                         //transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.fixedDeltaTime);
                         Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed);// * Time.fixedDeltaTime);
 
-                        var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
-                        var player = playerObj.GetComponent<Player>();
                         player.MoveInput(moveVec * speed * Time.fixedDeltaTime, finalRotation);
                     }
                     else
@@ -174,8 +193,6 @@ public class NetcodeManager : MonoBehaviour
                         Quaternion toRotation = Quaternion.LookRotation(moveVec, Vector3.up);
                         Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed);
 
-                        var playerObj = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
-                        var player = playerObj.GetComponent<Player>();
                         player.MoveInput(Vector3.zero, finalRotation);
                     }
                     anim.SetBool("isMoving", isMoving);
@@ -189,63 +206,83 @@ public class NetcodeManager : MonoBehaviour
                     }
 
                     //check speed timer
-                    var pO = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
-                    var pl = pO.GetComponent<Player>();
-                    if (pl.Speed.Value > 150f)
+                    if (player.Speed.Value > 150f)
                     {
-                        pl.DecreaseTime();
-                        if (pl.SpeedTime.Value <= 0f)
+                        player.DecreaseTime();
+                        if (player.SpeedTime.Value <= 0f)
                         {
-                            pl.DecreaseSpeed();
+                            player.DecreaseSpeed();
                         }
                     }
 
                     //point text
                     //panelGameplay.GetComponent<TMPro.TMP_Text>().text = "Points: " + pl.Points.Value;
-                    pointUI.GetComponent<TMPro.TMP_Text>().text = "Points: " + pl.Points.Value;
+                    pointUI.GetComponent<TMPro.TMP_Text>().text = "Points: " + player.Points.Value;
 
                 }//if(timeout <= 0f)
                  //////////////////////////////////////////////////////////////////////////////////////GAME LOOP ENDS HERE
 
                 //look to server player's time to see if game is over
-                //isPlaying = false;
-                //gameOver = true;
-
-
-
-
+                if (p.GetComponent<Player>().GameTime.Value <= 0f)
+                {
+                    p.GetComponent<Player>().GameTime.Value = 0f;
+                    p.GetComponent<Player>().Stop();
+                    gameTimer.GetComponent<TMPro.TMP_Text>().text = "0";
+                    isPlaying = false;
+                    gameOver = true;
+                    lobby = false;
+                }
             }
-
-
-
-
-
-
         }//if(isPlaying)
-        else if(gameOver)
+        else if(gameOver && !lobby)
         {
             if (audioOnce)
             {
                 aud.Stop("Blue Clapper Instrumental");
                 aud.Play("Cassette Tape Dream");
                 audioOnce = false;
-                instructions.SetActive(true);
                 panelGameplay.SetActive(false);
+                waitOnce = true;
+                timeout = 5f;
+                
+                //show winners/scores
+                panelGameover.SetActive(true);
+                NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>().ShowResults();
             }
 
-            waitOnce = true;
-            timeout = .5f;
+            
 
             //play again
-            //gameOver = false;
-            //isPlaying = true;
+            timeout -= Time.fixedDeltaTime;
+            if(timeout <= 0f)
+            {
+                timeout = 3.5f;
+                panelGameover.SetActive(false);
+                credits.SetActive(true);
+                instructions.SetActive(true);
+                gameOver = true;
+                isPlaying = false;
+                audioOnce = true;
+                waitOnce = true;
+                lobby = true;
+                //StartButtons();
+                gui = true;
+            }
         }
-    }
+    }//FixedUpdate()
 
     public static void StartButtons()
     {
-        if (GUILayout.Button("Host")) NetworkManager.Singleton.StartHost();
-        if (GUILayout.Button("Client")) NetworkManager.Singleton.StartClient();
+        if (GUILayout.Button("Host"))
+        {
+            NetworkManager.Singleton.StartHost();
+            gui = false;
+        }
+        if (GUILayout.Button("Client"))
+        {
+            NetworkManager.Singleton.StartClient();
+            gui = false;
+        }
         //if (GUILayout.Button("Server")) NetworkManager.Singleton.StartServer();
     }
 
@@ -271,5 +308,21 @@ public class NetcodeManager : MonoBehaviour
     public void Restart()
     {
         StartButtons();
+    }
+
+    public void SubmitName(string name)
+    {
+        Debug.Log("Called. Name is: " + name);
+        switch(name)
+        {
+            case "hell":
+            case "fuck":
+            case "fvck":
+                break;
+            default:
+                NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>().username = name;
+                NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().GetComponent<Player>().SetNames();
+                break;
+        }
     }
 }

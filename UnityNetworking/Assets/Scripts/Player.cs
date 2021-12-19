@@ -13,11 +13,13 @@ public class Player : NetworkBehaviour
     public NetworkVariable<Quaternion> Rotation = new NetworkVariable<Quaternion>();
     public NetworkVariable<float> Speed = new NetworkVariable<float>();
     public NetworkVariable<float> SpeedTime = new NetworkVariable<float>();
-    public NetworkVariable<float> GameTime = new NetworkVariable<float>();//ONLY the server player's time matters
+    public NetworkVariable<float> GameTime = new NetworkVariable<float>();
     public NetworkVariable<int> Points = new NetworkVariable<int>();
     public NetworkVariable<int> PlayerNum = new NetworkVariable<int>();
     public NetworkVariable<bool> Buffed = new NetworkVariable<bool>();
     public NetworkVariable<bool> Playing = new NetworkVariable<bool>();
+    public string username = "Default";
+    float audioWaitTime = 3f;
 
     public override void OnNetworkSpawn()
     {
@@ -41,7 +43,15 @@ public class Player : NetworkBehaviour
     {
         if(Playing.Value)
         {
-            TimePass(Time.fixedDeltaTime);
+            audioWaitTime -= Time.fixedDeltaTime;
+            if (audioWaitTime <= 0f)
+            {
+                TimePass(Time.fixedDeltaTime);
+            }
+        }
+        else
+        {
+            audioWaitTime = 3f;
         }
     }
 
@@ -178,19 +188,83 @@ public class Player : NetworkBehaviour
         }
     }
 
-    /*public void EndGame()
+    public void EndGame()
     {
+        FindObjectOfType<NetcodeManager>().Restart();
         if (NetworkManager.Singleton.IsServer)
         {
-            FindObjectOfType<NetcodeManager>().Restart();
-            Destroy(gameObject);
+            NetworkManager.Singleton.DisconnectClient(NetworkManager.Singleton.LocalClientId);
+            Destroy(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject());
         }
         else
         {
-            NetcodeManager n = FindObjectOfType<NetcodeManager>();
+            //NetcodeManager n = FindObjectOfType<NetcodeManager>();
+            ulong n = NetworkManager.Singleton.LocalClientId;
             RestartServerRpc(n);
         }
-    }*/
+    }
+
+    public int ReturnClientCount()
+    {
+        return NetworkManager.Singleton.ConnectedClientsList.Count;
+    }
+
+    public void SetNames()
+    {
+        int i = 0;
+        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            if (i < 5)
+            {
+                GameObject.Find("/Canvas/Panel - Lobby/Players/PlayerCard (" + i + ")/Text - Ready").GetComponent<TMPro.TMP_Text>().text = client.PlayerObject.transform.GetComponent<Player>().username + "\nis ready";
+                ++i;
+            }
+        }
+
+        
+    }
+
+    public void ShowResults()
+    {
+        GameObject results = GameObject.Find("/Canvas/Panel - GameOver/Results");
+        int i = 0;
+        int[] points = { 0, 0, 0, 0, 0 };
+        string[] clientNames = { "", "", "", "", "" };
+        foreach (NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
+        {
+            points[i] = client.PlayerObject.gameObject.GetComponent<Player>().Points.Value;
+            clientNames[i] = client.PlayerObject.gameObject.GetComponent<Player>().username;
+            ++i;
+        }
+        results.GetComponent<TMPro.TMP_Text>().text = Orderer(points, clientNames);
+    }
+
+    string Orderer(int[] p, string[] c)
+    {
+        //bubble sort because it's easy
+        for(int x = 0; x < 5; ++x)
+        {
+            for(int y = x; y < 4; ++y)
+            {
+                if(p[y] > p[y+1])
+                {
+                    int tempPoints = p[y + 1];
+                    string tempClient = c[y + 1];
+                    p[y + 1] = p[y];
+                    c[y + 1] = c[y];
+                    p[y] = tempPoints;
+                    c[y] = tempClient;
+                }
+            }
+        }
+
+        string msg = "Game over\n1st: " + c[4] + " with " + p[4] + " points"
+            + "\n2nd: " + c[3] + " with " + p[3] + " points"
+            + "\n3rd: " + c[2] + " with " + p[2] + " points"
+            + "\n4th: " + c[1] + " with " + p[1] + " points"
+            + "\n5th: " + c[0] + " with " + p[0] + " points";
+        return msg;
+    }
 
     public void IncreasePoints()
     {
@@ -277,6 +351,19 @@ public class Player : NetworkBehaviour
         else
         {
             LosePointsServerRpc(lost);
+        }
+    }
+
+    public void Stop()
+    {
+        //lose up to 5 points
+        if (NetworkManager.Singleton.IsServer)
+        {
+            Playing.Value = false;
+        }
+        else
+        {
+            StopPlayServerRpc();
         }
     }
 
@@ -409,16 +496,19 @@ public class Player : NetworkBehaviour
     [ServerRpc]
     public void TimeRequestServerRpc(float t, ServerRpcParams rpcParams = default)
     {
-        /*foreach(NetworkClient client in NetworkManager.Singleton.ConnectedClientsList)
-        {
-            if(client.PlayerObject.IsS)
-        }*/
         GameTime.Value -= t;
     }
 
-    /*[ServerRpc]
-    public void RestartServerRpc(NetcodeManager n, ServerRpcParams rpcParams = default)
+    [ServerRpc]
+    public void StopPlayServerRpc(ServerRpcParams rpcParams = default)
     {
-        n.Restart();
-    }*/
+        Playing.Value = false;
+    }
+
+    [ServerRpc]
+    public void RestartServerRpc(ulong n, ServerRpcParams rpcParams = default)
+    {
+        NetworkManager.Singleton.DisconnectClient(n);
+        Destroy(NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject());
+    }
 }
